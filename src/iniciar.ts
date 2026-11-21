@@ -1,6 +1,7 @@
 import { logs, SeverityNumber, trace } from '@opentelemetry/api';
 import { startNodeSdk } from '@opentelemetry/sdk-node';
 import type { Atributos, Logador, OpcoesDoLog, Telemetria } from './telemetria.js';
+import { correlationIdAtual } from './correlacao.js';
 
 export interface OpcoesDaTelemetria {
   servico: string;
@@ -35,7 +36,8 @@ function criarLogador(servico: () => string, exportar: boolean, fixos?: Atributo
   const em = (nivel: Nivel) => (mensagem: string, atributos?: Atributos, opcoes?: OpcoesDoLog) => {
     const [severityNumber, severityText, peso] = NIVEIS[nivel];
     if (peso < nivelMinimo()) return;
-    const todos = { ...fixos, ...atributos };
+    const correlacao = correlationIdAtual();
+    const todos = { ...fixos, ...(correlacao && { correlation_id: correlacao }), ...atributos };
     if (opcoes?.stdout !== false) console[SAIDA[nivel]](linhaJson(nivel, servico(), mensagem, todos));
     exportador?.emit({ severityNumber, severityText, body: mensagem, attributes: todos });
   };

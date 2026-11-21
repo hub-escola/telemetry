@@ -21,6 +21,20 @@ await telemetria.fechar();
 - `tracer` é exposto, mas nenhum span é exportado hoje.
 - `fechar()` encerra o SDK. Chame no shutdown do processo.
 
+## Correlação
+
+Cada requisição, mensagem de fila ou tick de job roda dentro de um `correlation_id` (UUID v4). Todo log emitido dentro desse contexto recebe o campo automaticamente, sem passar nada no logger.
+
+- `aceitarCorrelationId(valor)`: usa o valor recebido se for UUID v4 válido; senão gera outro. Use com o cabeçalho `x-correlation-id` (`CABECALHO_CORRELACAO`).
+- `comCorrelacao(id, fn)`: roda `fn` com o id. Use no consumidor de fila, com o id lido do cabeçalho da mensagem.
+- `comNovaCorrelacao(fn)`: devolve uma função que roda `fn` com um id novo a cada chamada. Use em timers: `setInterval(comNovaCorrelacao(() => this.executar()), ms)`.
+- `entrarNaCorrelacao(id)`: para middleware assíncrono (ex.: hook `onRequest` do Fastify), quando não dá para envolver a execução.
+- `correlationIdAtual()`: lê o id do contexto atual.
+
+Fora de um contexto, o log sai sem `correlation_id`.
+
+## Configuração
+
 ## Configuração
 
 | Variável | Efeito |
