@@ -7,6 +7,7 @@ export interface OpcoesDoLog {
 }
 
 export interface Logador {
+  debug(mensagem: string, atributos?: Atributos, opcoes?: OpcoesDoLog): void;
   info(mensagem: string, atributos?: Atributos, opcoes?: OpcoesDoLog): void;
   warn(mensagem: string, atributos?: Atributos, opcoes?: OpcoesDoLog): void;
   error(mensagem: string, atributos?: Atributos, opcoes?: OpcoesDoLog): void;

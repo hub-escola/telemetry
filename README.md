@@ -13,7 +13,11 @@ telemetria.logger.error('Falha ao consultar', { codigo: 'DB_TIMEOUT' }, { stdout
 await telemetria.fechar();
 ```
 
-- `logger.info | warn | error (mensagem, atributos?, opcoes?)`. Com `{ stdout: false }` o log vai só para o OTel.
+- `logger.debug | info | warn | error (mensagem, atributos?, opcoes?)`. Com `{ stdout: false }` o log vai só para o OTel. `debug` só sai com `LOG_LEVEL=debug`.
+- O stdout é uma linha JSON por log: `{"time","level","service","msg", ...atributos}`. `warn` e `error` vão para o stderr.
+- `obterLogger('componente')` é para bibliotecas e módulos sem acesso ao SDK: usa o serviço do processo (`OTEL_SERVICE_NAME`, definido por `iniciarTelemetria`) e acrescenta `componente`.
+- `atributosDoErro(erro)` devolve `error.type` e `error.message`. Use em vez de passar o objeto de erro: a mensagem de um driver pode trazer URL com senha.
+- Mensagem fixa, dado variável em atributo: `logger.info('Fila conectada', { fila })`, não `` `Fila ${fila} conectada` ``. Assim dá para agrupar por mensagem no LogsQL.
 - `tracer` é exposto, mas nenhum span é exportado hoje.
 - `fechar()` encerra o SDK. Chame no shutdown do processo.
 

@@ -1,9 +1,10 @@
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { iniciarTelemetria } from '../src/index.js';
+import { atributosDoErro, iniciarTelemetria, obterLogger } from '../src/index.js';
 
 const CHAVES = [
+  'LOG_LEVEL',
   'OTEL_EXPORTER_OTLP_ENDPOINT',
   'OTEL_EXPORTER_OTLP_LOGS_ENDPOINT',
   'OTEL_EXPORTER_OTLP_PROTOCOL',
@@ -30,7 +31,46 @@ describe('iniciarTelemetria', () => {
     await telemetria.fechar();
 
     expect(telemetria.ativa).toBe(false);
-    expect(log).toHaveBeenCalledWith('olá');
+    const linha = JSON.parse(log.mock.calls[0]![0] as string);
+    expect(linha).toMatchObject({ level: 'INFO', service: 'teste', msg: 'olá' });
+    expect(typeof linha.time).toBe('string');
+  });
+
+  it('atributos entram na linha, erro vai para stderr e debug só aparece com LOG_LEVEL=debug', () => {
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const err = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { logger } = iniciarTelemetria({ servico: 'teste' });
+
+    logger.debug('oculto');
+    logger.error('falhou', { fila: 'q.x', ...atributosDoErro(new TypeError('boom')) });
+    process.env.LOG_LEVEL = 'debug';
+    logger.debug('visível');
+
+    expect(log).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(log.mock.calls[0]![0] as string)).toMatchObject({ level: 'DEBUG', msg: 'visível' });
+    expect(JSON.parse(err.mock.calls[0]![0] as string)).toMatchObject({
+      level: 'ERROR',
+      fila: 'q.x',
+      'error.type': 'TypeError',
+      'error.message': 'boom'
+    });
+  });
+
+  it('obterLogger usa o serviço do processo e marca o componente', () => {
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    iniciarTelemetria({ servico: 'portal-api' });
+
+    obterLogger('rabbitmq').info('conectado');
+
+    expect(JSON.parse(log.mock.calls[0]![0] as string)).toMatchObject({
+      service: 'portal-api',
+      componente: 'rabbitmq',
+      msg: 'conectado'
+    });
+  });
+
+  it('atributosDoErro aceita valor que não é Error', () => {
+    expect(atributosDoErro('texto')).toEqual({ 'error.type': 'string', 'error.message': 'texto' });
   });
 
   it('com endpoint envia o log por OTLP com service.name e os atributos', async () => {
