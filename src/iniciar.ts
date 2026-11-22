@@ -2,7 +2,9 @@ import { logs, trace } from '@opentelemetry/api';
 import { startNodeSdk } from '@opentelemetry/sdk-node';
 import type { Atributos, Logador, Telemetria } from './telemetria.js';
 import { correlationIdAtual } from './correlacao.js';
-import { criarLogador, type Nivel } from './logador.js';
+import { atributosDoErro, criarLogador, type Nivel } from './logador.js';
+
+export { atributosDoErro };
 
 export interface OpcoesDaTelemetria {
   servico: string;
@@ -25,12 +27,6 @@ function logadorDoProcesso(servico: () => string, exportar: boolean, fixos?: Atr
     correlacao: correlationIdAtual,
     fixos
   });
-}
-
-/** Atributos padronizados de um erro: só tipo e mensagem, nunca o objeto inteiro (pode carregar URL com senha). */
-export function atributosDoErro(erro: unknown): Atributos {
-  if (erro instanceof Error) return { 'error.type': erro.name, 'error.message': erro.message };
-  return { 'error.type': typeof erro, 'error.message': String(erro) };
 }
 
 /**

@@ -41,6 +41,12 @@ export interface OpcoesDoLogador {
   fixos?: Atributos;
 }
 
+/** Atributos padronizados de um erro: só tipo e mensagem, nunca o objeto inteiro (pode carregar URL com senha). */
+export function atributosDoErro(erro: unknown): Atributos {
+  if (erro instanceof Error) return { 'error.type': erro.name, 'error.message': erro.message };
+  return { 'error.type': typeof erro, 'error.message': String(erro) };
+}
+
 function semIndefinidos(atributos: Atributos): Atributos {
   return Object.fromEntries(Object.entries(atributos).filter(([, valor]) => valor !== undefined));
 }

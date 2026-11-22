@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it, vi } from 'vitest';
-import { criarLogador, type EmissorDeLog, type RegistroDeLog } from '../src/logador.js';
+import { atributosDoErro, criarLogador, type EmissorDeLog, type RegistroDeLog } from '../src/logador.js';
 
 function montar(nivel: 'debug' | 'info' | 'warn' | 'error' = 'info') {
   const registros: RegistroDeLog[] = [];
@@ -75,6 +75,13 @@ describe('criarLogador', () => {
 
     expect(registros[0]!.attributes['code.file.path']).toMatch(/logador\.test\.ts$/);
     expect(registros[0]!.attributes['code.line.number']).toBe(Number(linhaDoTeste) + 1);
+  });
+
+  it('atributosDoErro traz só tipo e mensagem, nunca a URL do objeto', () => {
+    const erro = Object.assign(new TypeError('falhou em https://u:senha@host'), { url: 'https://u:senha@host' });
+
+    expect(atributosDoErro(erro)).toEqual({ 'error.type': 'TypeError', 'error.message': 'falhou em https://u:senha@host' });
+    expect(atributosDoErro('texto')).toEqual({ 'error.type': 'string', 'error.message': 'texto' });
   });
 
   it('o núcleo não importa nada de Node nem do SDK (precisa rodar no bundle do Next)', () => {
