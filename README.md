@@ -33,7 +33,21 @@ Cada requisição, mensagem de fila ou tick de job roda dentro de um `correlatio
 
 Fora de um contexto, o log sai sem `correlation_id`.
 
-## Configuração
+## Next.js (`@hubescola/telemetry/logador`)
+
+Apps Next não usam `iniciarTelemetria`: o SDK já é registrado pelo `registerOTel` do `@vercel/otel`. Para eles existe o subpath `/logador`, um núcleo puro (sem Node e sem SDK) que roda no bundle do Next.
+
+```ts
+import { logs } from '@opentelemetry/api-logs';
+import { criarLogador } from '@hubescola/telemetry/logador';
+
+const logador = criarLogador({ servico: () => 'site', emissor: logs.getLogger('site') });
+logador.info('Vaga publicada', { 'vaga.id': id });
+```
+
+- O `emissor` precisa vir da mesma API que registrou o provider. Com `@vercel/otel` (que usa `@opentelemetry/api-logs` 0.223) é `api-logs`. Com `iniciarTelemetria` (Node) é `@opentelemetry/api`. Misturar as duas faz o log sumir sem erro.
+- Opções: `saida` (padrão: `console`), `nivel` (função, padrão `info`), `correlacao` (função que devolve o id atual, opcional), `fixos` (atributos em todo log).
+- O stdout sai em JSON, igual ao do pacote raiz.
 
 ## Configuração
 
@@ -49,10 +63,10 @@ Métricas ficam desligadas. Só `service.name` e `service.version` vão no recur
 
 ## Instalação
 
-Por tag, como dependência Git:
+Como dependência Git, fixada por hash de commit (não por tag):
 
 ```json
-"@hubescola/telemetry": "git+https://github.com/hub-escola/telemetry.git#v1.0.0"
+"@hubescola/telemetry": "git+https://github.com/hub-escola/telemetry.git#<hash>"
 ```
 
 O `prepare` compila o `dist/` na instalação. Não há build manual.
