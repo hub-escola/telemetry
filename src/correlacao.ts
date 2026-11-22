@@ -5,7 +5,13 @@ export const CABECALHO_CORRELACAO = 'x-correlation-id';
 
 const UUID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-const contexto = new AsyncLocalStorage<{ correlationId: string }>();
+type ContextoDeCorrelacao = AsyncLocalStorage<{ correlationId: string }>;
+
+const CHAVE_DO_CONTEXTO = Symbol.for('@hubescola/telemetry/contexto-de-correlacao');
+
+// Uma única instância por processo: se o pacote for carregado mais de uma vez (ex.: cópia aninhada no node_modules de outro pacote), todas leem o mesmo contexto.
+const registro = globalThis as unknown as Record<symbol, ContextoDeCorrelacao | undefined>;
+const contexto: ContextoDeCorrelacao = (registro[CHAVE_DO_CONTEXTO] ??= new AsyncLocalStorage<{ correlationId: string }>());
 
 export function gerarCorrelationId(): string {
   return randomUUID();

@@ -39,6 +39,15 @@ describe('correlação', () => {
     }
   );
 
+  it('cópias do pacote carregadas separadamente leem o mesmo contexto', async () => {
+    vi.resetModules();
+    const copia = await import('../src/correlacao.js');
+
+    await comCorrelacao(ID, async () => {
+      expect(copia.correlationIdAtual()).toBe(ID);
+    });
+  });
+
   it('não tem correlação fora de um contexto', () => {
     expect(correlationIdAtual()).toBeUndefined();
   });
