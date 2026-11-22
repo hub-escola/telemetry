@@ -3,6 +3,16 @@
   "version": "1.2.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./logador": {
+      "types": "./dist/logador.d.ts",
+      "default": "./dist/logador.js"
+    }
+  },
   "type": "module",
   "scripts": {
     "build": "tsc",

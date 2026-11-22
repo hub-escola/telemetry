@@ -69,6 +69,17 @@ describe('iniciarTelemetria', () => {
     });
   });
 
+  it('cada linha traz o arquivo e a linha de quem chamou o logger', () => {
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const { logger } = iniciarTelemetria({ servico: 'teste' });
+    const linhaDoTeste = new Error().stack!.split('\n')[1]!.match(/:(\d+):\d+\)?$/)![1]!;
+    logger.info('ponto');
+
+    const linha = JSON.parse(log.mock.calls[0]![0] as string);
+    expect(linha['code.file.path']).toMatch(/iniciar\.test\.ts$/);
+    expect(linha['code.line.number']).toBe(Number(linhaDoTeste) + 1);
+  });
+
   it('atributosDoErro aceita valor que não é Error', () => {
     expect(atributosDoErro('texto')).toEqual({ 'error.type': 'string', 'error.message': 'texto' });
   });
