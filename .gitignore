@@ -3,3 +3,6 @@ dist/
 .env
 .env.*
 *.log
+.claude/*
+!.claude/settings.json
+!.claude/agents/
