@@ -1,0 +1,8 @@
+# Instalar uma vez: pip install pre-commit && pre-commit install
+# Obs: se o git tiver core.hooksPath configurado, o pre-commit se recusa a instalar; desfaça com
+# `git config --unset-all core.hooksPath` neste repo, ou use o hook global.
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: 83d9cd684c87d95d656c1458ef04895a7f1cbd8e # v8.30.1
+    hooks:
+      - id: gitleaks
