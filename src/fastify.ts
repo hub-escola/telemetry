@@ -32,9 +32,13 @@ export function registrarLogDeRequisicoes(app: AppComHooks, logger: Pick<Logador
     if (rotasIgnoradas.includes(rota)) return;
     const status = resposta.statusCode;
     const duracaoMs = Math.round(resposta.elapsedTime);
+    // A origem seria este hook, não o código da app: zera para não apontar para o pacote.
     logger[status >= 500 ? 'error' : 'info'](
       'http_request',
       {
+        'code.file.path': undefined,
+        'code.line.number': undefined,
+        'code.function.name': undefined,
         'http.request.method': pedido.method,
         'http.route': rota,
         'http.response.status_code': status,
