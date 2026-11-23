@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { registrarLogDeRequisicoes, type AppComHooks, type PedidoHttp, type RespostaHttp } from '../src/index.js';
 import { CABECALHO_CORRELACAO } from '../src/correlacao.js';
+import { criarLogador } from '../src/logador.js';
 
 type Hook = (pedido: PedidoHttp, resposta: RespostaHttp) => Promise<unknown>;
 
@@ -73,5 +74,16 @@ describe('registrarLogDeRequisicoes', () => {
     await hooks.onResponse!({ ...pedido('/api/candidato/:id'), url: '/api/candidato/123?token=segredo' } as PedidoHttp, resposta(200));
 
     expect(JSON.stringify(logger.info.mock.calls)).not.toMatch(/segredo|123\?/);
+  });
+
+  it('o http_request não aponta a origem para o código do pacote', async () => {
+    const { app, hooks } = montarApp();
+    const emitidos: { attributes: Record<string, unknown> }[] = [];
+    const logador = criarLogador({ servico: () => 'teste', emissor: { emit: (registro) => emitidos.push(registro) } });
+    registrarLogDeRequisicoes(app, logador);
+
+    await hooks.onResponse!(pedido('/api/x'), resposta(200));
+
+    expect(emitidos[0].attributes).not.toHaveProperty('code.file.path');
   });
 });
