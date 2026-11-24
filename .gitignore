@@ -6,3 +6,7 @@ dist/
 .claude/*
 !.claude/settings.json
 !.claude/agents/
+# chaves e certificados
+*.pem
+*.key
+*.p12

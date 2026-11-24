@@ -1,0 +1,31 @@
+name: Gitleaks
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  segredos:
+    name: Segredos no histórico
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Instalar o gitleaks (versão fixa, hash conferido)
+        run: |
+          v=8.30.1
+          arq="gitleaks_${v}_linux_x64.tar.gz"
+          curl -fsSL -o "$arq" "https://github.com/gitleaks/gitleaks/releases/download/v${v}/$arq"
+          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  $arq" | sha256sum -c -
+          tar -xzf "$arq" gitleaks
+
+      - name: Procurar segredos em todo o histórico (usa o .gitleaksignore)
+        run: ./gitleaks git --log-opts="--all" --redact --no-banner --verbose
